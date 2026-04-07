@@ -16,6 +16,11 @@ import { eq, desc, and } from "drizzle-orm";
 
 const router: IRouter = Router();
 
+// Публичный эндпоинт — возвращает имя бота чтобы фронтенд мог показать его сразу
+router.get("/auth/config", (_req, res) => {
+  res.json({ botUsername: process.env.TELEGRAM_BOT_USERNAME || null });
+});
+
 router.use(healthRouter);
 router.use("/auth", authRouter);
 router.use("/users", usersRouter);
