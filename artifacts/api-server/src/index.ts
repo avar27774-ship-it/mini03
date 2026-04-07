@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { seed } from "./seed";
 import { pool } from "@workspace/db";
+import { setupWebhook } from "./lib/bot";
 
 const rawPort = process.env["PORT"] ?? "3000";
 const port = Number(rawPort);
@@ -174,6 +175,7 @@ async function migrate() {
 async function start() {
   await migrate();
   await seed().catch((err) => logger.error(err, "Seed failed"));
+  await setupWebhook();
 
   app.listen(port, "0.0.0.0", (err) => {
     if (err) {
