@@ -8,6 +8,7 @@ import dealsRouter from "./deals";
 import walletRouter from "./wallet";
 import messagesRouter from "./messages";
 import adminRouter from "./admin";
+import botRouter from "./bot";
 import { authMiddleware } from "../lib/auth";
 import { db } from "@workspace/db";
 import { products, users, favorites } from "@workspace/db/schema";
@@ -24,6 +25,7 @@ router.use("/deals", dealsRouter);
 router.use("/wallet", walletRouter);
 router.use("/messages", messagesRouter);
 router.use("/admin", adminRouter);
+router.use("/bot", botRouter);
 
 router.get("/favorites", authMiddleware, async (req, res) => {
   try {
