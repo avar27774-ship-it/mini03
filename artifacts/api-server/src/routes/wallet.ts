@@ -88,8 +88,8 @@ router.post("/withdraw", authMiddleware, async (req, res) => {
     if (parseFloat(user.balance) < amount) { res.status(400).json({ message: "Insufficient funds" }); return; }
 
     const newBal = (parseFloat(user.balance) - amount).toFixed(2);
-    await db.update(users).set({ balance: newBal }).where(eq(users.id, userId));
 
+    // FIX: сначала создаём транзакцию, потом списываем баланс
     const [tx] = await db.insert(transactions).values({
       userId,
       type: "withdrawal",
@@ -101,6 +101,8 @@ router.post("/withdraw", authMiddleware, async (req, res) => {
       balanceBefore: user.balance,
       balanceAfter: newBal,
     }).returning();
+
+    await db.update(users).set({ balance: newBal }).where(eq(users.id, userId));
 
     await notifyAdmin(`New withdrawal request: ${amount} ₽ via ${method}`);
 
