@@ -1,12 +1,38 @@
 import { db } from "@workspace/db";
 import { authCodes } from "@workspace/db/schema";
-import { eq, and, gt, isNull } from "drizzle-orm";
+import { eq, and, gt, isNull, desc } from "drizzle-orm";
 import { logger } from "./logger";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-// Установить вебхук: вызови один раз после деплоя
-// POST https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://your-domain/api/bot/webhook
+// Автоматически устанавливает вебхук при старте сервера
+export async function setupWebhook() {
+  if (!BOT_TOKEN) {
+    logger.warn("TELEGRAM_BOT_TOKEN not set, skipping webhook setup");
+    return;
+  }
+  const appUrl = process.env.APP_URL;
+  if (!appUrl) {
+    logger.warn("APP_URL not set, skipping webhook setup");
+    return;
+  }
+  try {
+    const webhookUrl = `${appUrl}/api/bot/webhook`;
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: webhookUrl, drop_pending_updates: true }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      logger.info({ webhookUrl }, "Telegram webhook set successfully");
+    } else {
+      logger.error({ data }, "Failed to set Telegram webhook");
+    }
+  } catch (err) {
+    logger.error(err, "Error setting Telegram webhook");
+  }
+}
 
 async function sendMessage(chatId: number | string, text: string) {
   if (!BOT_TOKEN) return;
@@ -25,7 +51,7 @@ export async function handleBotUpdate(update: any) {
     const chatId = message.chat.id;
     const from = message.from;
     const text = message.text.trim();
-    const username = (from?.username || "").toLowerCase();
+    const username = (from?.username || "").toLowerCase().replace(/^@/, "");
 
     // /start или /code — выдать код по username
     if (text === "/start" || text.startsWith("/code")) {
@@ -47,7 +73,7 @@ export async function handleBotUpdate(update: any) {
             isNull(authCodes.usedAt)
           )
         )
-        .orderBy(authCodes.createdAt)
+        .orderBy(desc(authCodes.createdAt))
         .limit(1);
 
       if (!authCode) {
