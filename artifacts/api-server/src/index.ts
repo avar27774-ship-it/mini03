@@ -166,6 +166,17 @@ async function migrate() {
       CREATE INDEX IF NOT EXISTS auth_codes_telegram_username_idx ON auth_codes(telegram_username);
       CREATE INDEX IF NOT EXISTS auth_codes_code_idx ON auth_codes(code);
     `);
+
+    await client.query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS ref_count INTEGER NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS ref_rewards NUMERIC(12,2) NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS two_fa_enabled BOOLEAN NOT NULL DEFAULT false,
+        ADD COLUMN IF NOT EXISTS two_fa_code TEXT,
+        ADD COLUMN IF NOT EXISTS two_fa_expires BIGINT,
+        ADD COLUMN IF NOT EXISTS notification_settings JSONB NOT NULL DEFAULT '{}';
+    `);
+
     logger.info("Database migration completed");
   } finally {
     client.release();
