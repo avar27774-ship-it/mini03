@@ -20,6 +20,7 @@ const MessagesPage = lazy(() => import("@/pages/messages"));
 const SettingsPage = lazy(() => import("@/pages/settings"));
 const FavoritesPage = lazy(() => import("@/pages/favorites"));
 const AdminPage = lazy(() => import("@/pages/admin"));
+const RadioPage = lazy(() => import("@/pages/radio"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient({
@@ -61,6 +62,7 @@ function Router() {
           <Route path="/settings" component={SettingsPage} />
           <Route path="/favorites" component={FavoritesPage} />
           <Route path="/admin" component={AdminPage} />
+          <Route path="/radio" component={RadioPage} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>
