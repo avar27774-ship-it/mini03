@@ -12,7 +12,7 @@ import { useEffect } from "react";
 
 export default function AuthPage() {
   const { t } = useLang();
-  const { setAuth, isAuthenticated, isTelegramMiniApp } = useAuth();
+  const { setAuth, isAuthenticated, isTelegramMiniApp, isTelegramLoading, setTelegramLoading } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -44,15 +44,20 @@ export default function AuthPage() {
   useEffect(() => {
     if (!isTelegramMiniApp) return;
     const initData = (window as any).Telegram?.WebApp?.initData;
-    if (!initData || initData.length === 0) return;
+    if (!initData || initData.length === 0) {
+      setTelegramLoading(false);
+      return;
+    }
     telegramAuthMutation.mutate({ data: { initData } }, {
       onSuccess: (res) => {
         setAuth(res.token, res.user);
+        setTelegramLoading(false);
         toast({ title: t("loginSuccess") });
         setLocation("/");
       },
       onError: () => {
         // Если авто-вход не удался — показываем обычную форму
+        setTelegramLoading(false);
         toast({ title: t("error"), variant: "destructive" });
       },
     });
@@ -104,8 +109,8 @@ export default function AuthPage() {
     });
   };
 
-  // В TG Mini App показываем спиннер только пока идёт авто-вход
-  if (isTelegramMiniApp && telegramAuthMutation.isPending) {
+  // Пока не завершилась проверка TG или идёт авто-вход — показываем спиннер, форму НЕ рендерим
+  if (isTelegramLoading || (isTelegramMiniApp && telegramAuthMutation.isPending)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
