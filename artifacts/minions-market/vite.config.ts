@@ -22,5 +22,19 @@ export default defineConfig({
   server: {
     port: 5173,
     host: "0.0.0.0",
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        // Для аудио-стримов отключаем буферизацию
+        configure: (proxy) => {
+          proxy.on("proxyReq", (_proxyReq, req) => {
+            if (req.url?.startsWith("/api/radio/stream")) {
+              // не буферизировать ответ стрима
+            }
+          });
+        },
+      },
+    },
   },
 });
